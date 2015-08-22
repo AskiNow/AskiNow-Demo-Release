@@ -16,6 +16,7 @@ mongoose.connect(config.database);
 var secret = config.secret;
 
 var apiRoutes = express.Router();
+
 // routes that not need to be protected
 
 /**

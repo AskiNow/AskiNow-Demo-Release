@@ -18,13 +18,15 @@ app.use(morgan('dev')); // standard apache combined logger
 app.get('/', function(req, res) {
     res.send('hello world');
 });
-// API doc route
-app.use('/apidoc', express.static(__dirname + '/apidoc'));
+
 // API routes
+// API doc route
+app.use('/docs', express.static('./app/apidoc'));
 var apiRoutes = require('./app/routes/api');
 app.use('/api', apiRoutes);
+
 // should use subdomain in product level
-app.use(subdomain('api', apiRoutes));
+// app.use(subdomain('api', apiRoutes));
 
 app.listen(process.env.PORT, process.env.IP);
 
