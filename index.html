@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+	<head>
+		<title>AskiNow Demo 0.1.0</title>
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" type="text/css" />
+		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		
+		<style type="text/css">
+			body {
+				padding-top: 70px;
+			}
+			.navbar-default {
+			   
+			}
+		</style>
+	
+	</head>
+    <body>
+    <div class="navbar navbar-default navbar-fixed-top">
+   		<div class="container">
+	   		<div class="navbar-header">
+	        <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-main">
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	          <span class="icon-bar"></span>
+	        </button>
+	        <a class="navbar-brand" href="#">AskiNow Demo</a>
+	    	</div>
+	    	<form class="navbar-form navbar-right" role="search" id="signin">
+	        <div class="form-group">
+	          <input type="text" class="form-control" id="email" placeholder="Email">
+	        </div>
+	        <div class="form-group">
+	          <input type="password" class="form-control" id="password" placeholder="Password">
+	        </div>
+	        <button type="submit" class="btn btn-primary">Sign In</button>
+	      </form>
+      </div>
+  	</div>
+   	
+    <div class="container">
+      <div class="row">
+        <div class="col-md-7">
+        	<div id="chatPanel" class="panel panel-danger">
+        		<div class="panel-heading">
+                <span id="userInfo">You haven't logged in yet!</span>
+                <span id="chatInfo" style="display: none"> To: <span id="talkTo"></span></span>
+            </div>
+            <div class="panel-body" style="height: 500px">
+            	 <ul class="media-list" id="messages">
+            	 </ul>
+            </div>
+            <div class="panel-footer">
+            	<form action="" id="sendMessage" class="input-group">
+	            	<input id="m" autocomplete="off" placeholder="Write some messages here..." class="form-control"/>
+		            <span class="input-group-btn">
+	                <button type="submit" class="btn btn-primary" type="button">SEND</button>
+	            	</span>
+		          </form>
+            </div>
+        	</div>
+        </div>
+        <div class="col-md-4 well" style="height: 600px">
+        	<form action="" id="search" class="form-group">
+          	<input placeholder="Search Teacher..." id="searchInput" class="form-control"/>
+          </form>
+          <div id="teacherList" class="panel panel-danger">
+          	<div class="panel-body" style="height: 500px">
+            	 <ul class="media-list" id="teachers">
+            	 </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <script>
+  
+    var socket = io();
+    var name;
+    var email;
+    var password;
+    var token;
+   	var talkTo = null;
+   	
+   	socket.on('connect', function(data) {
+   		
+   	});
+    
+    socket.on('login', function(data) {
+        console.log('received user name: ' + data.name);
+        $('#userInfo').text(data.name);
+        name = data.name;
+        $('#chatPanel').removeClass('panel-danger');
+        $('#chatPanel').addClass('panel-default')
+    })
+    
+    socket.on('join success', function(msg) {
+        console.log(msg);
+    });
+    
+    socket.on('chat message', function(data){
+      $('#messages').append(
+      	'<li class="media">' + 
+      	'<div class="media-body">' + data.msg + '</div>' + 
+      	'<small class="text-muted">' + data.from + ' to ' + data.to + '</small>' +
+      	'</li>'
+      	);
+    });
+    
+    $('form#signin').submit(function(event) {
+        event.preventDefault();
+        email = $('#email').val();
+        password = $('#password').val();
+        
+        $.ajax({
+        	type: 'POST',
+        	url: 	'/api/tokens',
+        	data: 'email='+email+'&password=' + password,
+        	success: function(json) {
+        		token = json.token;
+        		socket.emit('join', token);
+        		console.log(token);
+        		$('form#signin').fadeOut();
+        	}
+        })
+        
+    })
+    
+    $('form#sendMessage').submit(function(event){
+      event.preventDefault();
+      socket.emit('chat message', { msg: $('#m').val(), token: token, to: talkTo});
+      $('#m').val('');
+    });
+    
+    $('#teachers').on('click', 'li', function(event) {
+    	console.log('clicked ' + $(this).data('name'));
+    	$('#chatInfo').fadeIn();
+    	$('#talkTo').text($(this).data('name'));
+    	talkTo = $(this).data('name');
+    })
+    
+    $('#searchInput').keyup(function(event) {
+   		var searchValue = $(this).val();
+   		$.get('/api/search?keyword=' + searchValue, function(data) {
+   			var users = data.users;
+   			console.log('find ' + users.length + ' number of users');
+   			$('#teachers').empty();
+   			for (var i = 0; i < users.length; i++) {
+   				console.log(users[i].name);
+   				var school = '[NO SCHOOL INFO]';
+   				var name = users[i].name;
+   				var role = users[i].role;
+   				if (users[i].educations.length > 0)
+   					school = users[i].educations[0].school;
+   				$('#teachers').append(
+		      	'<li class="media" data-name="' + name + '">' + 
+		      	'<div class="media-body">' + name + '</div>' + 
+		      	'<small class="text-muted">' + role + ', studied at ' + school + '</small>' +
+		      	'</li>'
+	      	);
+   			}
+   		});
+    });
+    
+    </script>
+  </body>
+</html>
