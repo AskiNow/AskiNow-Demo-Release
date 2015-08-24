@@ -16,7 +16,11 @@ var Work        = models.Work;
 
 // here use the params in config.js file.
 // connect to mongodb
-mongoose.connect(config.database);
+var mongodbUrl = config[process.env.NODE_ENV].mongodb;
+var mongodb = mongoose.connect(mongodbUrl).connection;
+mongodb.on('error', function(err) { console.log(err.message); });
+mongodb.once('open', function() { console.log("connected to mongodb"); });
+
 var secret = config.secret;
 var apiRoutes = express.Router();
 

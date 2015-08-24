@@ -1,5 +1,5 @@
 {
-  "name": "node-token-jwt",
+  "name": "AskiNow-API-Server",
   "main": "server.js",
   "dependencies": {
     "bcrypt": "^0.8.5",

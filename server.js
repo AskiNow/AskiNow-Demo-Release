@@ -29,8 +29,6 @@ var api = require('./app/routes/api');
 var apiRoutes = api.apiRoutes;
 app.use('/api', apiRoutes);
 
-
-
 // should use subdomain in product level
 // app.use(subdomain('api', apiRoutes));
 
